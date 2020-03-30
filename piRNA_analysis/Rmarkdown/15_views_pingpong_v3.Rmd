@@ -1,0 +1,108 @@
+---
+title: "10 nt overlap and nucleotide preferences of piRNA"
+author: "Yuka Kabayama"
+date: "24/03/2020"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(ggrastr)
+```
+
+#Arrange table for overlap analysis
+```{r}
+C1_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/C1_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C1_L1) <- c("gap", "count")
+C1_L1 <- C1_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_1") %>% dplyr::select("gap", "freq", "sample")
+
+C2_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/C2_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C2_L1) <- c("gap", "count")
+C2_L1 <- C2_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_2") %>% dplyr::select("gap", "freq", "sample")
+
+C3_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/C3_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C3_L1) <- c("gap", "count")
+C3_L1 <- C3_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_3") %>% dplyr::select("gap", "freq", "sample")
+
+KO1_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/S1_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO1_L1) <- c("gap", "count")
+KO1_L1 <- KO1_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO1") %>% dplyr::select("gap", "freq", "sample")
+
+KO2_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/S2_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO2_L1) <- c("gap", "count")
+KO2_L1 <- KO2_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO2") %>% dplyr::select("gap", "freq", "sample")
+
+KO3_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/pingpong/S3_consensus_L1A_v3_gapcount.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO3_L1) <- c("gap", "count")
+KO3_L1 <- KO3_L1 %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO3") %>% dplyr::select("gap", "freq", "sample")
+
+merge <- bind_rows(C1_L1, C2_L1, C3_L1, KO1_L1, KO2_L1, KO3_L1)
+```
+
+#Frequency of overlapped length
+```{r}
+p <- ggplot(data=merge, aes(x=gap, y=freq, fill = sample, colour = sample)) + 
+  theme_classic(base_size = 15) +
+  geom_line(size = 0.5, stat="identity") + 
+  scale_colour_manual(values = c("#000000", "#333333", "#555555", "#99CCFF", "#3399CC", "#0099CC")) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 30)) +
+  labs(title="Overlap of sense-antisense L1Md_A piRNAs",x="Nucleotides", y="Frequency") 
+p
+```
+
+#Arrange table for nucleotide preference
+```{r}
+C1_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/C1_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C1_L1) <- c("position", "nucleotide", "count")
+C1_L1 <- C1_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_1") %>% mutate(condition = "Control") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+C2_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/C2_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C2_L1) <- c("position", "nucleotide", "count")
+C2_L1 <- C2_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_2") %>% mutate(condition = "Control") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+C3_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/C3_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(C3_L1) <- c("position", "nucleotide", "count")
+C3_L1 <- C3_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Control_3") %>% mutate(condition = "Control") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+KO1_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/S1_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO1_L1) <- c("position", "nucleotide", "count")
+KO1_L1 <- KO1_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO1") %>% mutate(condition = "Spocd1_KO") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+KO2_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/S2_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO2_L1) <- c("position", "nucleotide", "count")
+KO2_L1 <- KO2_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO2") %>% mutate(condition = "Spocd1_KO") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+KO3_L1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/FUTA/S3_L1A_nuc_count.txt", sep="\t", stringsAsFactors = FALSE, header = FALSE)
+colnames(KO3_L1) <- c("position", "nucleotide", "count")
+KO3_L1 <- KO3_L1 %>% group_by(position) %>% mutate(count_sum = sum(count)) %>% mutate(freq = (count/count_sum)) %>% mutate(sample = "Spocd1_KO3") %>% mutate(condition = "Spocd1_KO") %>% dplyr::select("position", "nucleotide", "freq", "sample", "condition")
+
+all <- bind_rows(C1_L1, C2_L1, C3_L1, KO1_L1, KO2_L1, KO3_L1)
+FirstU <- all %>% filter(position == "First", nucleotide == "T") %>% dplyr::select(-sample)
+TenthA <- all %>% filter(position == "Tenth", nucleotide == "A") %>% dplyr::select(-sample)
+```
+
+#Plus dot
+```{r}
+p <- ggplot(data = TenthA, aes(y=freq, x=condition)) + theme_classic(base_size = 15)
+p <- p + stat_summary(aes(fill=condition), fun.y=mean, geom = "bar", colour = "black", position = "dodge", width = 0.5)
+p <- p + stat_summary(aes(group=condition), fun.data = mean_se, geom = "errorbar", size = 0.5, width=0.1) +
+  scale_fill_manual(values = c("gray", "#3399CC")) +
+  scale_y_continuous(expand = c(0,0), limits = c(0, 0.8)) +
+  geom_dotplot(data = TenthA, binwidth = 0.001, dotsize = 15, stackdir = "center", alpha = 0.7, position = "identity",
+  binaxis = "y", method = "histodot", binpositions = "bygroup") +
+  labs(title="Nucleotide preference L1Md_A 10A",x="Condition", y="Frequency")
+p
+```
+
+#t.test
+```{r}
+t.test(FirstU$freq[FirstU$condition=="Control"], FirstU$freq[FirstU$condition=="Spocd1_KO"], var.equal = T)
+t.test(TenthA$freq[TenthA$condition=="Control"], TenthA$freq[TenthA$condition=="Spocd1_KO"], var.equal = T)
+```
+
+
+
+

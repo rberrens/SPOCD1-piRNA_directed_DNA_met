@@ -1,0 +1,55 @@
+---
+title: "For merging sRNA-seq data"
+author: "Yuka Kabayama"
+date: "02/03/2020"
+output: html_document
+params: 
+  sample: 
+    value: "Zoch_lane8C1"
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+metadata <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/metadata.txt", stringsAsFactors = FALSE, header=TRUE)
+path   <- "/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/mapped/"
+path2 <- "/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/"
+sample <- params$sample
+```
+
+```{r}
+mirna_mature <- read.table(paste(path, sample, "_mirna_mature.sam", sep="")) %>% dplyr::select(V1, V3) %>% separate(V1, c("ID", "length", "count"), sep = ":") %>% mutate(subfamily = "", family = "miRNA", class = "miRNA_mature") %>% rename("subclass" = "V3")
+
+mirna_hairpin <- read.table(paste(path, sample, "_mirna_hairpin.sam", sep="")) %>% dplyr::select(V1, V3) %>% separate(V1, c("ID", "length", "count"), sep = ":") %>% mutate(subfamily = "", family = "miRNA",class = "miRNA_hairpin") %>% rename("subclass" = "V3")
+
+ncRNA <- read.table(paste(path, sample, "_ncRNA.sam", sep="")) %>% dplyr::select(V1) %>% separate(V1, c("ID", "length", "count"), sep = ":") %>% mutate(subclass = "", subfamily = "", family = "ncRNA", class = "ncRNA")
+
+nrRNA <- read.table(paste(path, sample, "_nrRNA.sam", sep="")) %>% dplyr::select(V1) %>% separate(V1, c("ID", "length", "count"), sep = ":") %>% mutate(subclass = "", subfamily = "", family = "nrRNA", class = "nrRNA")
+
+teRNA <- read.table(paste(path2, sample, "_teRNA_family.txt", sep="")) %>% dplyr::select(-V2, -V3) %>% separate(V1, c("ID", "length", "count"), sep = ":") %>% rename("subclass" = "V4", "subfamily" = "V6", "family" = "V5") %>% mutate(class = "teRNA")
+
+tegRNA <- read.table(paste(path2, sample, "_unique_sorted_edited_TE.bed", sep="")) %>% dplyr::select(V4) %>% separate(V4, c("ID", "length", "count"), sep = ":") %>% mutate(subclass = "", subfamily = "", family = "tegRNA", class = "tegRNA")
+
+genes <- read.table(paste(path2, sample, "_unique_sorted_edited_genes.bed", sep="")) %>% dplyr::select(V4) %>% separate(V4, c("ID", "length", "count"), sep = ":") %>% mutate(subclass = "", subfamily = "", family = "genes", class = "genes")
+
+others <- read.table(paste(path2, sample, "_unique_sorted_edited_others.bed", sep="")) %>% dplyr::select(V4) %>% separate(V4, c("ID", "length", "count"), sep = ":") %>% mutate(subclass = "", subfamily = "", family = "others", class = "others")
+```
+
+```{r}
+sample_table <- bind_rows(mirna_mature, mirna_hairpin, ncRNA, nrRNA, teRNA, tegRNA, genes, others)
+
+sample_id_   <- as.character(metadata %>% filter(File == sample) %>% dplyr::select(sample_id))
+condition_   <- as.character(metadata %>% filter(File == sample) %>% dplyr::select(condition))
+sample_file_ <- as.character(metadata %>% filter(File == sample) %>% dplyr::select(File))
+normalizeF <- mirna_mature %>% mutate(count = as.numeric(count)) %>% summarise(count_mirna = sum(count)) %>% mutate(factor = 1000000/count_mirna)
+normalize <- as.numeric(normalizeF %>% dplyr::select(factor))
+
+sample_table <- sample_table %>% mutate(sample_id = sample_id_, condition = condition_, normF = normalize)
+```
+
+```{r}
+write.table(sample_table, paste("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/view/",sample,"_table",".txt"), sep="\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+```

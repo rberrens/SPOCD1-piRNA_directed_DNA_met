@@ -1,0 +1,18 @@
+mirnas: "/Users/Shared/ykabayam/tools/bowtie_index/miRNA_Mus_mature"
+mirnas_hairpin: "/Users/Shared/ykabayam/tools/bowtie_index/miRNA_Mus_hairpin"
+ncRNA: "/Users/Shared/ykabayam/tools/bowtie_index/Mus_musculus_tRNA_rRNA_snoRNA_snRNA_scRNA_srpRNA"
+nrRNA: "/Users/Shared/ykabayam/tools/bowtie_index/UCSC_mm10_rmsk_not_retro"
+teRNA: "/Users/Shared/ykabayam/tools/bowtie_index/UCSC_mm10_rmsk_retro"
+genome: "/Users/Shared/ykabayam/tools/Mus_musculus/UCSC_mm10/Sequence/BowtieIndex/genome"
+bedTE: "/Users/Shared/ykabayam/tools/Mus_musculus/UCSC_mm10/Repeatmasker_mm10_TE.bed"
+bedGenes: "/Users/Shared/ykabayam/tools/Mus_musculus/UCSC_mm10/RefSeq_genes_refFlat_mm10.bed"
+familyTE: "/Users/Shared/ykabayam/tools/Mus_musculus/UCSC_mm10/Sequence/list_LINE_SINE_LTR.txt"
+
+
+samples:
+  Zoch_lane8C1:
+  Zoch_lane8C2:
+  Zoch_lane8C3:
+  Zoch_lane8S1:
+  Zoch_lane8S2:
+  Zoch_lane8S3:

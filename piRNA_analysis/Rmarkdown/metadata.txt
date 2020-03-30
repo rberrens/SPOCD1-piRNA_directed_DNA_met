@@ -1,0 +1,7 @@
+File	sample_id	condition
+Zoch_lane8C1	Control_S1	Control_S
+Zoch_lane8C2	Control_S2	Control_S
+Zoch_lane8C3	Control_S3	Control_S
+Zoch_lane8S1	Spocd1_KO1	Spocd1_KO
+Zoch_lane8S2	Spocd1_KO2	Spocd1_KO
+Zoch_lane8S3	Spocd1_KO3	Spocd1_KO

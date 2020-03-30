@@ -1,0 +1,120 @@
+---
+title: "TE-derived piRNA-focused analysis for Spocd1"
+author: "Yuka Kabayama"
+date: "06/03/2020"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(ggrastr)
+library(DESeq2)
+```
+
+```{r}
+C1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8C1_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+C2 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8C2_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+C3 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8C3_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+S1 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8S1_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+S2 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8S2_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+S3 <- read.table("/Users/ykabayam/Documents/sRNA-seq/Ansgar/Processed/v3/mapped/Zoch_lane8S3_teRNA_family.txt", header = FALSE, stringsAsFactors = FALSE)
+
+C1 <- C1 %>% mutate(Sample = "C1", Condition = "Control")
+C2 <- C2 %>% mutate(Sample = "C2", Condition = "Control")
+C3 <- C3 %>% mutate(Sample = "C3", Condition = "Control")
+S1 <- S1 %>% mutate(Sample = "S1", Condition = "Spocd1_KO")
+S2 <- S2 %>% mutate(Sample = "S2", Condition = "Spocd1_KO")
+S3 <- S3 %>% mutate(Sample = "S3", Condition = "Spocd1_KO")
+
+all <- bind_rows(C1,C2,C3,S1,S2,S3)
+all <- all %>% dplyr::select(-V3) %>% separate(V1, c("ID", "length", "count"), sep = ":")
+colnames(all) = c("ID", "length", "count", "strand", "species", "subfamily", "class", "Sample", "Condition")
+all <- all %>% mutate(count = as.numeric(count))
+pirna <- all %>% filter(length >= 25, length <= 30)
+norm_pi <- pirna %>% group_by(Sample) %>% summarise(normalize = sum(count)) %>% ungroup() %>%
+                         dplyr::select(Sample, normalize)
+```
+
+#Exract specific species of piRNA for consensus mapping
+```{r}
+L1A <- pirna %>% filter(species == "L1Md_A", Sample == "C3") 
+write.table(L1A, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_L1MdA_C3.txt", quote = FALSE, row.names = FALSE)
+
+L1F2 <- pirna %>% filter(species == "L1Md_F2", Sample == "C3") 
+write.table(L1F2, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_L1MdF2_C3.txt", quote = FALSE, row.names = FALSE)
+
+L1T <- pirna %>% filter(species == "L1Md_T", Sample == "S3") 
+write.table(L1T, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_L1MdT_KO3.txt", quote = FALSE, row.names = FALSE)
+
+L1Gf <- pirna %>% filter(species == "L1Md_Gf", Sample == "S3") 
+write.table(L1Gf, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_L1MdGf_KO3.txt", quote = FALSE, row.names = FALSE)
+
+IAPEy <- pirna %>% filter(str_detect(species, regex("IAPEY", ignore_case = TRUE)), Sample == "S3")
+write.table(IAPEy, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_IAPEy_KO3.txt", quote = FALSE, row.names = FALSE)
+
+IAPEz <- pirna %>% filter(str_detect(species, regex("IAPEZ", ignore_case = TRUE)), Sample == "S3")
+write.table(IAPEz, "/Users/ykabayam/Documents/sRNA-seq/spocd1/Processed/v3/view/spocd1_pi_IAPEz_KO3.txt", quote = FALSE, row.names = FALSE)
+```
+
+#Comparison of top 10 LINE piRNA
+```{r}
+young_LINEs <- pirna %>% filter(species %in% c("L1Md_A", "L1Md_T", "L1Md_Gf", "L1Md_F2", "L1_Mus1", "L1_Mus2", "L1_Mus3", "L1_Mur1", "L1Md_F3", "L1Md_F"))
+
+young_LINEs_2 <- transform(young_LINEs, species= factor(species, levels = c("L1Md_T", "L1Md_A", "L1Md_F2", "L1_Mus3", "L1Md_F3", "L1_Mus1", "L1_Mus2", "L1Md_F", "L1_Mur1", "L1Md_Gf")))
+
+count_top_L1 <- young_LINEs_2 %>% group_by(species, Sample, Condition) %>% summarise(count_L1 = sum(count)) %>% left_join(norm_pi) %>% rowwise() %>% mutate(freq = count_L1/normalize)
+
+count_top_L1_strand <- young_LINEs_2 %>% group_by(strand, species, Sample, Condition) %>% summarise(count_strand = sum(count)) %>% left_join(norm_pi) %>% rowwise() %>% mutate(freq = count_strand/normalize)
+
+plus <- count_top_L1_strand %>% filter(strand == "+") %>% mutate(count =(freq*1))
+minus <- count_top_L1_strand %>% filter(strand == "-") %>% mutate(count =(freq*-1))
+```
+
+#Comparison of top 10 IAP piRNA
+```{r}
+top_IAP <- pirna %>% filter(species %in% c("IAPEz-int", "IAPEy-int", "IAPEY3-int", "IAPLTR3-int", "IAPLTR2_Mm", "IAPLTR1_Mm", "IAPLTR2b", "IAPLTR2a2_Mm", "IAPLTR3", "IAPLTR1a_Mm"))
+
+top_IAP_2 <- transform(top_IAP, species= factor(species, levels = c("IAPEz-int", "IAPEy-int", "IAPEY3-int", "IAPLTR3-int", "IAPLTR2_Mm", "IAPLTR1_Mm", "IAPLTR2b", "IAPLTR2a2_Mm", "IAPLTR3", "IAPLTR1a_Mm")))
+
+count_top_IAP <- top_IAP_2 %>% group_by(species, Sample, Condition) %>% summarise(count_ERVK = sum(count)) %>% left_join(norm_pi) %>% rowwise() %>% mutate(freq = count_ERVK/normalize)
+
+count_top_IAP_strand <- top_IAP_2 %>% group_by(strand, species, Sample, Condition) %>% summarise(count_strand = sum(count)) %>% left_join(norm_pi) %>% rowwise() %>% mutate(freq = count_strand/normalize)
+
+plus <- count_topERVK_strand %>% filter(strand == "+") %>% mutate(count =(freq*1))
+minus <- count_topERVK_strand %>% filter(strand == "-") %>% mutate(count =(freq*-1))
+```
+
+#Relative amount of top 10 piRNA - individual values
+```{r}
+p <- ggplot(data = count_top_XXX, aes(x=species, y=freq, fill=Sample)) + geom_bar(colour = "black", stat = "identity", position = "dodge") + theme_classic() + scale_fill_brewer() +
+  labs(x = "Subclass", y = "Relative amount of piRNA", title = "Top 10 L1-derived piRNA") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+p
+```
+
+#Relative amount of top 10 piRNA - mean values with error bars
+```{r}
+p <- ggplot(data = count_top_XXX, aes(y=freq, x=factor(species), fill = Condition)) + 
+  theme_classic(base_size = 10)
+p <- p + stat_summary(aes(fill=Condition), fun.y=mean, geom = "bar", colour = "black", position = "dodge", width = 0.5)
+p <- p + stat_summary(aes(group=Condition), fun.data = mean_se, geom = "errorbar", size = 0.3, width=0.3, position = position_dodge(.5)) +
+  scale_fill_manual(values = c("gray", "#3399CC")) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "Subclass", y = "Relative amount of piRNA", title = "Top 10 L1-derived piRNA") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  geom_dotplot(binaxis = "y", stackdir = "center", method = "histodot", binwidth = 0.001, dotsize = 1, colour="black", position = position_dodge(.5), alpha=0.8)
+p
+```
+
+```{r}
+test <- count_young_L1s %>% filter(species == "L1_Mus3")
+t.test(test$freq[test$Condition=="Control"], test$freq[test$Condition=="Spocd1_KO"], var.equal = T)
+```
+
+```{r}
+test <- count_topERVK %>% filter(species == "IAPLTR3-int")
+t.test(test$freq[test$Condition=="Control"], test$freq[test$Condition=="Spocd1_KO"], var.equal = T)
+```
