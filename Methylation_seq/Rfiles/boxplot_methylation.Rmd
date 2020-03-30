@@ -1,0 +1,125 @@
+---
+title: "boxplots_methylation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(pastecs)
+library(reshape2)
+library(car)
+```
+
+## Significance of Methylation level between groups
+We want to test the significance of the methylation of different genomic features in wildtype and Miwi2KO, Spocd1KO.
+We generated probes using Seqmonk. We then extract the probes and methylation level and load the data.
+
+```{r cars}
+getwd()
+all <- read.delim(' allProbes.txt', header=TRUE)
+CGI <- read.delim(' CGI.txt', header=TRUE)
+genes <- read.delim(' genic.txt', header=TRUE)
+promoter <- read.delim(' promoter.txt', header=TRUE)
+intergenic <- read.delim(' intergenic.txt', header=TRUE)
+TEs <- read.delim(' Repeats.txt', header=TRUE)
+L1 <- read.delim(' L1.txt', header=TRUE)
+L1Md_A <- read.delim(' L1Md_A.txt', header=TRUE)
+L1Md_T <- read.delim(' L1Md_T.txt', header=TRUE)
+L1Md_Gf <- read.delim(' L1Md_Gf.txt', header=TRUE)
+L1Md_F <- read.delim(' L1Md_F.txt', header=TRUE)
+IAP <- read.delim(' IAP.txt', header=TRUE)
+IAPEz <- read.delim(' IAPEz.txt', header=TRUE)
+IAPEy<- read.delim(' IAPEy.txt', header=TRUE)
+Alu <- read.delim(' Alu.txt', header=TRUE)
+ERVL <- read.delim(' ERVL.txt', header=TRUE)
+ERVK <- read.delim(' ERVK.txt', header=TRUE)
+MMERVK10c <- read.delim(' MMERVK10c.txt', header=TRUE)
+
+```
+
+Cleanup the data.
+```{r}
+CGI_clean <- CGI %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(CGI_clean) <- c("genotype", "methylation")
+boxplot(CGI_clean$methylation~CGI_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+all_clean <- all %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT))  %>% drop_na %>% melt()
+colnames(all_clean) <- c("genotype", "methylation")
+boxplot(all_clean$methylation~all_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+genes_clean <- genes %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(genes_clean) <- c("genotype", "methylation")
+boxplot(genes_clean$methylation~genes_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+promoter_clean <- promoter %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(promoter_clean) <- c("genotype", "methylation")
+boxplot(promoter_clean$methylation~promoter_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+intergenic_clean <- intergenic %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(intergenic_clean) <- c("genotype", "methylation")
+boxplot(intergenic_clean$methylation~intergenic_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+TEs_clean <- TEs %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(TEs_clean) <- c("genotype", "methylation")
+boxplot(TEs_clean$methylation~TEs_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+L1_clean <- L1 %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(L1_clean) <- c("genotype", "methylation")
+boxplot(L1_clean$methylation~L1_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+L1Md_A_clean <- L1Md_A %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(L1Md_A_clean) <- c("genotype", "methylation")
+boxplot(L1Md_A_clean$methylation~L1Md_A_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+L1Md_T_clean <- L1Md_T %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(L1Md_T_clean) <- c("genotype", "methylation")
+boxplot(L1Md_T_clean$methylation~L1Md_T_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+L1Md_Gf_clean <- L1Md_Gf %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(L1Md_Gf_clean) <- c("genotype", "methylation")
+boxplot(L1Md_Gf_clean$methylation~L1Md_Gf_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+L1Md_F_clean <- L1Md_F %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(L1Md_F_clean) <- c("genotype", "methylation")
+boxplot(L1Md_F_clean$methylation~L1Md_F_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+IAP_clean <- IAP %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(IAP_clean) <- c("genotype", "methylation")
+boxplot(IAP_clean$methylation~IAP_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+
+IAPEz_clean <- IAPEz %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(IAPEz_clean) <- c("genotype", "methylation")
+boxplot(IAPEz_clean$methylation~IAPEz_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+IAPEy_clean <- IAPEy %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(IAPEy_clean) <- c("genotype", "methylation")
+boxplot(IAPEy_clean$methylation~IAPEy_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+Alu_clean <- Alu %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(Alu_clean) <- c("genotype", "methylation")
+boxplot(Alu_clean$methylation~Alu_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+ERVL_clean <- ERVL %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(ERVL_clean) <- c("genotype", "methylation")
+boxplot(ERVL_clean$methylation~ERVL_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+ERVK_clean <- ERVK %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(ERVK_clean) <- c("genotype", "methylation")
+boxplot(ERVK_clean$methylation~ERVK_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+
+MMERVK10c_clean <- MMERVK10c %>% select(c(Mean.Miwi2_KO, Mean.Spocd1_KO, Mean.WT)) %>% drop_na %>% melt()
+colnames(MMERVK10c_clean) <- c("genotype", "methylation")
+boxplot(MMERVK10c_clean$methylation~MMERVK10c_clean$genotype, col=rainbow(3), ylab="Methylation level", las=1)
+```
+
