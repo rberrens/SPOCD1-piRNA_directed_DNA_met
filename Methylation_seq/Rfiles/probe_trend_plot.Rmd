@@ -1,0 +1,74 @@
+---
+title: "Probe_trend_plot"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#libraries and functions
+```{r, include=FALSE}
+library('reshape2')
+library('ggrepel')
+library('tidyr')
+library('ggpubr')
+library('RColorBrewer')
+library('scales')
+library('dplyr')
+
+'%notin%' = function(x, y) !(x %in% y)
+```
+#get filenames
+```{bash}
+cd ./Metaplost
+ls > files.txt
+cd ..
+mv ./Metapltos/files.txt ./files.txt
+```
+
+#load & annotate data all - averaged values
+```{r}
+filenamesread <- read.csv(file = "files.txt", header = FALSE, colClasses = "character", col.names = "Filenames") %>% filter(Filenames %notin% c("files.txt"))
+filenamesread <- filter_all(filenamesread, all_vars(!grepl()))
+filenames <- filenamesread$Filenames
+rm(filenamesread)
+final_table <- data_frame()
+for(fileX in filenames) {
+  table1 <- read.csv(file = as.character(paste("./Metaplots/", fileX, sep = "")) ,sep= "\t", header = TRUE, row.names = NULL ,  colClasses = c( "character", "integer", "NULL", rep("numeric", 9)))
+   
+table1 <- table1 %>% mutate(continuous = case_when(region == "upstream" ~ bin+0, region == "central" ~ bin+200, region == "downstream" ~ bin+400, TRUE ~ as.double(bin))) %>% mutate(class = paste(fileX)) %>% melt(id.vars = c("region", "bin", "continuous", "class"), measure.vars = seq(3, 11,1), variable.name = "Genotype")
+table1$Genotype <-  gsub("^.*\\.\\.\\.(.*)", "\\1", table1$Genotype)
+table1$value <- as.numeric(table1$value)
+
+final_table <- bind_rows(final_table, table1)
+rm(table1)
+}
+final_table <-  filter(final_table, Genotype %notin% c())
+
+final_table$Genotype <- factor(x = final_table$Genotype, levels = c("wildtype", "Dnmt3L_ctrl","Dnmt3C_ctrl", "Miwi2_KO", "Spocd1-KO", "Mili_KO", "Dnmt3C_KO", "Dnmt3L_KO"))
+final_table$class <- factor(x = final_table$class, levels = filenames)
+```
+
+#plot data all - averaged values
+```{r}
+fillings <- c(Miwi2_KO = "seagreen4", Spocd1_KO = "steelblue3", wildtype = "black", Mili_KO = "chocolate3", Dnmt3L_KO = "gray50", Dnmt3C_KO = "firebrick3", Dnmt3L_ctrl = "gray80", Dnmt3C_ctrl = "gray80" )
+LINETYPE <-  c(Miwi2_KO = "solid", Spocd1_KO = "solid", WT = "solid", Mili_KO = "solid", Dnmt3L_KO = "solid", Dnmt3C_KO = "solid", Dnmt3L_ctrl = "41", Dnmt3C_ctrl = "solid" )
+ggplot(data = final_table, aes (x = continuous)) +
+  #geom_point(aes(y = value, group = Genotype, colour = Genotype, fill = Genotype, alpha = 0.7)) +
+  geom_smooth(aes(y = value, group = Genotype, colour = Genotype, fill = Genotype, alpha = 0.6, linetype = Genotype), method = "auto", span = 0.05, formula = y ~ x, se = FALSE, alpha = 0.4, size = 2 ) +
+  scale_fill_manual(values = fillings) +
+  scale_linetype_manual(values = LINETYPE) +
+  scale_colour_manual(values = fillings) +
+  theme_bw() +
+  coord_cartesian(ylim = c(0, 100), xlim = c(180,420)) +
+  scale_y_continuous(expand = c(0, 0), breaks = pretty_breaks(n=4)) +
+  labs(x = "element + adjacent 1kb", y = "CpG methylation [%]") +
+  theme(legend.position = "right", axis.text.x = element_blank(), axis.line.x = element_line(), axis.ticks.x = element_blank()) +
+  #geom_rect(xmin = 200, xmax=400, ymin=-5, ymax = 0, fill = "black") +
+  geom_vline(xintercept = 200) +
+  geom_vline(xintercept = 400) +
+  facet_wrap(~class, ncol = 4, scales = "fixed")
+
+ggsave(filename = "Metaplots_Zoch_50CpG10reads_grouped_1000adjacent_span0.05.pdf", scale=1, width=55, height=30, units = "cm")
+```
+
