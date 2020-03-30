@@ -27,6 +27,7 @@ mv ./Metapltos/files.txt ./files.txt
 ```
 
 #load & annotate data all - averaged values
+If you get the table output from Seqmonk it is necessary to add another tab stop in the header line in front of the data columns
 ```{r}
 filenamesread <- read.csv(file = "files.txt", header = FALSE, colClasses = "character", col.names = "Filenames") %>% filter(Filenames %notin% c("files.txt"))
 filenamesread <- filter_all(filenamesread, all_vars(!grepl()))
