@@ -1,0 +1,283 @@
+---
+title: "met_sig"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(pastecs)
+library(Rfast)
+```
+
+## Significance of Methylation level between groups
+We want to test the significance of the methylation of different genomic features in wildtype and Miwi2KO, Tex15cd1KO.
+We generated probes using Seqmonk. We then extract the probes and methylation level and load the data.
+
+```{r cars}
+all <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/all.txt', header=TRUE)
+CGI <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/CGI.txt', header=TRUE)
+genes <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/genic.txt', header=TRUE)
+promoter <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/promoter.txt', header=TRUE)
+intergenic <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/intergenic.txt', header=TRUE)
+TEs <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/repeats.txt', header=TRUE)
+L1Md_A <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/L1MdA.txt', header=TRUE)
+L1Md_T <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/L1MdT.txt', header=TRUE)
+L1Md_Gf <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/L1MdGf.txt', header=TRUE)
+L1Md_F <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/L1MdF.txt', header=TRUE)
+L1 <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/L1.txt', header=TRUE)
+IAP <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/IAP.txt', header=TRUE)
+IAPEz <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/IAPEz.txt', header=TRUE)
+IAPEy<- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/IAPEy.txt', header=TRUE)
+Alu <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/Alu.txt', header=TRUE)
+ERVL <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/ERVL.txt', header=TRUE)
+ERVK <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/ERVK.txt', header=TRUE)
+MMERVK10c <- read.delim('/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/allProbes_feature/expanded/MMERVK10c.txt', header=TRUE)
+
+```
+
+Cleanup the data.
+Calculate the mean
+```{r}
+CGI_clean <- CGI %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3"))%>% drop_na
+CGI_mean <- colMeans(x=CGI_clean)
+CGI_var <- colVars(as.matrix(CGI_norm))
+
+all_clean <- all %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+all_mean <- colMeans(x=all_clean)
+all_var <- colVars(as.matrix(all_clean))
+
+gene_clean <- genes %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+gene_mean <- colMeans(x=gene_clean)
+gene_var <- colVars(as.matrix(gene_clean))
+
+promoter_clean <- promoter %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+promoter_mean <- colMeans(x=promoter_clean)
+promoter_var <- colVars(as.matrix(promoter_clean))
+
+intergenic_clean <- intergenic %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+intergenic_mean <- colMeans(x=intergenic_clean)
+intergenic_var <- colVars(as.matrix(intergenic_clean))
+
+TE_clean <- TEs %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+TE_mean <- colMeans(x=TE_clean)
+TE_var <- colVars(as.matrix(TE_clean))
+
+L1Md_A_clean <- L1Md_A %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+L1Md_A_mean <- colMeans(x=L1Md_A_clean)
+L1Md_A_var <- colVars(as.matrix(L1Md_A_clean))
+
+L1Md_T_clean <- L1Md_T %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+L1Md_T_mean <- colMeans(x=L1Md_T_clean)
+L1Md_T_var <- colVars(as.matrix(L1Md_T_clean))
+
+L1Md_Gf_clean <- L1Md_Gf %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+L1Md_Gf_mean <- colMeans(x=L1Md_Gf_clean)
+L1Md_Gf_var <- colVars(as.matrix(L1Md_Gf_clean))
+
+L1Md_F_clean <- L1Md_F %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+L1Md_F_mean <- colMeans(x=L1Md_F_clean)
+L1Md_F_var <- colVars(as.matrix(L1Md_F_clean))
+
+IAP_clean <- IAP %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+IAP_mean <- colMeans(x=IAP_clean)
+IAP_var <- colVars(as.matrix(IAP_clean))
+
+IAPEz_clean <- IAPEz %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+IAPEz_mean <- colMeans(x=IAPEz_clean)
+IAPEz_var <- colVars(as.matrix(IAPEz_clean))
+
+IAPEy_clean <- IAPEy %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+IAPEy_mean <- colMeans(x=IAPEy_clean)
+IAPEy_var <- colVars(as.matrix(IAPEy_clean))
+
+Alu_clean <- Alu %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+Alu_mean <- colMeans(x=Alu_clean)
+Alu_var <- colVars(as.matrix(Alu_clean))
+
+ERVL_clean <- ERVL %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+ERVL_mean <- colMeans(x=ERVL_clean)
+ERVL_var <- colVars(as.matrix(ERVL_clean))
+
+ERVK_clean <- ERVK %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+ERVK_mean <- colMeans(x=ERVK_clean)
+ERVK_var <- colVars(as.matrix(ERVK_clean))
+
+MMERVK10c_clean <- MMERVK10c %>% select(c("Mean.Miwi2KO_1", "Mean.Miwi2KO_2", "Mean.Miwi2KO_3", "Mean.Tex15_1", "Mean.Tex15_2", "Mean.Tex15_3", "Mean.WT_ansgar_1", "Mean.WT_ansgar_2", "Mean.WT_ansgar_3")) %>% drop_na
+MMERVK10c_mean <- colMeans(x=MMERVK10c_clean)
+MMERVK10c_var <- colVars(as.matrix(MMERVK10c_clean))
+
+feature_norm_mean <- data.frame(CGI_mean, all_mean, gene_mean, promoter_mean, intergenic_mean, TE_mean, L1Md_A_mean, L1Md_T_mean,L1Md_Gf_mean, L1Md_F_mean, IAP_mean, IAPEz_mean, IAPEy_mean, Alu_mean, ERVL_mean, ERVK_mean, MMERVK10c_mean)
+
+```
+
+T.test on average
+```{r}
+CGI_Miwi2_WT_ttest <- t.test(CGI_mean[1:3], CGI_mean[7:9], paired=T)
+CGI_Miwi2_WT_ttest$p.value
+CGI_Tex15_WT_ttest <- t.test(CGI_mean[4:6], CGI_mean[7:9], paired=T)
+CGI_Tex15_WT_ttest$p.value
+CGI_Miwi2_Tex15_ttest <- t.test(CGI_mean[1:3], CGI_mean[4:6], paired=T)
+CGI_Miwi2_Tex15_ttest$p.value
+
+CGI_pvalues <- rbind(Miwi2_WT = CGI_Miwi2_WT_ttest$p.value, Tex15_WT = CGI_Tex15_WT_ttest$p.value, Miwi2_Tex15 = CGI_Miwi2_Tex15_ttest$p.value)
+
+all_Miwi2_WT_ttest <- t.test(all_mean[1:3], all_mean[7:9], paired=T)
+all_Miwi2_WT_ttest
+all_Tex15_WT_ttest <- t.test(all_mean[4:6], all_mean[7:9], paired=T)
+all_Tex15_WT_ttest
+all_Miwi2_Tex15_ttest <- t.test(all_mean[1:3], all_mean[4:6], paired=T)
+all_Miwi2_Tex15_ttest
+all_pvalues <- rbind(Miwi2_WT = all_Miwi2_WT_ttest$p.value, Tex15_WT = all_Tex15_WT_ttest$p.value, Miwi2_Tex15 = all_Miwi2_Tex15_ttest$p.value)
+
+
+gene_Miwi2_WT_ttest <- t.test(gene_mean[1:3], gene_mean[7:9], paired=T)
+gene_Miwi2_WT_ttest
+gene_Tex15_WT_ttest <- t.test(gene_mean[4:6], gene_mean[7:9], paired=T)
+gene_Tex15_WT_ttest
+gene_Miwi2_Tex15_ttest <- t.test(gene_mean[1:3], gene_mean[4:6], paired=T)
+gene_Miwi2_Tex15_ttest
+gene_pvalues <- rbind(Miwi2_WT = gene_Miwi2_WT_ttest$p.value, Tex15_WT = gene_Tex15_WT_ttest$p.value, Miwi2_Tex15 = gene_Miwi2_Tex15_ttest$p.value)
+
+
+promoter_Miwi2_WT_ttest <- t.test(promoter_mean[1:3], promoter_mean[7:9], paired=T)
+promoter_Miwi2_WT_ttest
+promoter_Tex15_WT_ttest <- t.test(promoter_mean[4:6], promoter_mean[7:9], paired=T)
+promoter_Tex15_WT_ttest
+promoter_Miwi2_Tex15_ttest <- t.test(promoter_mean[1:3], promoter_mean[4:6], paired=T)
+promoter_Miwi2_Tex15_ttest
+promoter_pvalues <- rbind(Miwi2_WT = promoter_Miwi2_WT_ttest$p.value, Tex15_WT = promoter_Tex15_WT_ttest$p.value, Miwi2_Tex15 = promoter_Miwi2_Tex15_ttest$p.value)
+
+
+intergenic_Miwi2_WT_ttest <- t.test(intergenic_mean[1:3], intergenic_mean[7:9], paired=T)
+intergenic_Miwi2_WT_ttest
+intergenic_Tex15_WT_ttest <- t.test(intergenic_mean[4:6], intergenic_mean[7:9], paired=T)
+intergenic_Tex15_WT_ttest
+intergenic_Miwi2_Tex15_ttest <- t.test(intergenic_mean[1:3], intergenic_mean[4:6], paired=T)
+intergenic_Miwi2_Tex15_ttest
+intergenic_pvalues <- rbind(Miwi2_WT = intergenic_Miwi2_WT_ttest$p.value, Tex15_WT = intergenic_Tex15_WT_ttest$p.value, Miwi2_Tex15 = intergenic_Miwi2_Tex15_ttest$p.value)
+
+
+TE_Miwi2_WT_ttest <- t.test(TE_mean[1:3], TE_mean[7:9], paired=T)
+TE_Miwi2_WT_ttest
+TE_Tex15_WT_ttest <- t.test(TE_mean[4:6], TE_mean[7:9], paired=T)
+TE_Tex15_WT_ttest
+TE_Miwi2_Tex15_ttest <- t.test(TE_mean[1:3], TE_mean[4:6], paired=T)
+TE_Miwi2_Tex15_ttest
+TE_pvalues <- rbind(Miwi2_WT = TE_Miwi2_WT_ttest$p.value, Tex15_WT = TE_Tex15_WT_ttest$p.value, Miwi2_Tex15 = TE_Miwi2_Tex15_ttest$p.value)
+
+
+L1Md_A_Miwi2_WT_ttest <- t.test(L1Md_A_mean[1:3], L1Md_A_mean[7:9], paired=T)
+L1Md_A_Miwi2_WT_ttest
+L1Md_A_Tex15_WT_ttest <- t.test(L1Md_A_mean[4:6], L1Md_A_mean[7:9], paired=T)
+L1Md_A_Tex15_WT_ttest
+L1Md_A_Miwi2_Tex15_ttest <- t.test(L1Md_A_mean[1:3], L1Md_A_mean[4:6], paired=T)
+L1Md_A_Miwi2_Tex15_ttest
+L1Md_A_pvalues <- rbind(Miwi2_WT = L1Md_A_Miwi2_WT_ttest$p.value, Tex15_WT = L1Md_A_Tex15_WT_ttest$p.value, Miwi2_Tex15 = L1Md_A_Miwi2_Tex15_ttest$p.value)
+
+
+L1Md_T_Miwi2_WT_ttest <- t.test(L1Md_T_mean[1:3], L1Md_T_mean[7:9], paired=T)
+L1Md_T_Miwi2_WT_ttest
+L1Md_T_Tex15_WT_ttest <- t.test(L1Md_T_mean[4:6], L1Md_T_mean[7:9], paired=T)
+L1Md_T_Tex15_WT_ttest
+L1Md_T_Miwi2_Tex15_ttest <- t.test(L1Md_T_mean[1:3], L1Md_T_mean[4:6], paired=T)
+L1Md_T_Miwi2_Tex15_ttest
+L1Md_T_pvalues <- rbind(Miwi2_WT = L1Md_T_Miwi2_WT_ttest$p.value, Tex15_WT = L1Md_T_Tex15_WT_ttest$p.value, Miwi2_Tex15 = L1Md_T_Miwi2_Tex15_ttest$p.value)
+
+
+L1Md_Gf_Miwi2_WT_ttest <- t.test(L1Md_Gf_mean[1:3], L1Md_Gf_mean[7:9], paired=T)
+L1Md_Gf_Miwi2_WT_ttest
+L1Md_Gf_Tex15_WT_ttest <- t.test(L1Md_Gf_mean[4:6], L1Md_Gf_mean[7:9], paired=T)
+L1Md_Gf_Tex15_WT_ttest
+L1Md_Gf_Miwi2_Tex15_ttest <- t.test(L1Md_Gf_mean[1:3], L1Md_Gf_mean[4:6], paired=T)
+L1Md_Gf_Miwi2_Tex15_ttest
+L1Md_Gf_pvalues <- rbind(Miwi2_WT = L1Md_Gf_Miwi2_WT_ttest$p.value, Tex15_WT = L1Md_Gf_Tex15_WT_ttest$p.value, Miwi2_Tex15 = L1Md_Gf_Miwi2_Tex15_ttest$p.value)
+
+
+L1Md_F_Miwi2_WT_ttest <- t.test(L1Md_F_mean[1:3], L1Md_F_mean[7:9], paired=T)
+L1Md_F_Miwi2_WT_ttest
+L1Md_F_Tex15_WT_ttest <- t.test(L1Md_F_mean[4:6], L1Md_F_mean[7:9], paired=T)
+L1Md_F_Tex15_WT_ttest
+L1Md_F_Miwi2_Tex15_ttest <- t.test(L1Md_F_mean[1:3], L1Md_F_mean[4:6], paired=T)
+L1Md_F_Miwi2_Tex15_ttest
+L1Md_F_pvalues <- rbind(Miwi2_WT = L1Md_F_Miwi2_WT_ttest$p.value, Tex15_WT = L1Md_F_Tex15_WT_ttest$p.value, Miwi2_Tex15 = L1Md_F_Miwi2_Tex15_ttest$p.value)
+
+
+
+IAP_Miwi2_WT_ttest <- t.test(IAP_mean[1:3], IAP_mean[7:9], paired=T)
+IAP_Miwi2_WT_ttest
+IAP_Tex15_WT_ttest <- t.test(IAP_mean[4:6], IAP_mean[7:9], paired=T)
+IAP_Tex15_WT_ttest
+IAP_Miwi2_Tex15_ttest <- t.test(IAP_mean[1:3], IAP_mean[4:6], paired=T)
+IAP_Miwi2_Tex15_ttest
+IAP_pvalues <- rbind(Miwi2_WT = IAP_Miwi2_WT_ttest$p.value, Tex15_WT = IAP_Tex15_WT_ttest$p.value, Miwi2_Tex15 = IAP_Miwi2_Tex15_ttest$p.value)
+
+
+IAPEz_Miwi2_WT_ttest <- t.test(IAPEz_mean[1:3], IAPEz_mean[7:9], paired=T)
+IAPEz_Miwi2_WT_ttest
+IAPEz_Tex15_WT_ttest <- t.test(IAPEz_mean[4:6], IAPEz_mean[7:9], paired=T)
+IAPEz_Tex15_WT_ttest
+IAPEz_Miwi2_Tex15_ttest <- t.test(IAPEz_mean[1:3], IAPEz_mean[4:6], paired=T)
+IAPEz_Miwi2_Tex15_ttest
+IAPEz_pvalues <- rbind(Miwi2_WT = IAPEz_Miwi2_WT_ttest$p.value, Tex15_WT = IAPEz_Tex15_WT_ttest$p.value, Miwi2_Tex15 = IAPEz_Miwi2_Tex15_ttest$p.value)
+
+
+IAPEy_Miwi2_WT_ttest <- t.test(IAPEy_mean[1:3], IAPEy_mean[7:9], paired=T)
+IAPEy_Miwi2_WT_ttest
+IAPEy_Tex15_WT_ttest <- t.test(IAPEy_mean[4:6], IAPEy_mean[7:9], paired=T)
+IAPEy_Tex15_WT_ttest
+IAPEy_Miwi2_Tex15_ttest <- t.test(IAPEy_mean[1:3], IAPEy_mean[4:6], paired=T)
+IAPEy_Miwi2_Tex15_ttest
+IAPEy_pvalues <- rbind(Miwi2_WT = IAPEy_Miwi2_WT_ttest$p.value, Tex15_WT = IAPEy_Tex15_WT_ttest$p.value, Miwi2_Tex15 = IAPEy_Miwi2_Tex15_ttest$p.value)
+
+
+Alu_Miwi2_WT_ttest <- t.test(Alu_mean[1:3], Alu_mean[7:9], paired=T)
+Alu_Miwi2_WT_ttest
+Alu_Tex15_WT_ttest <- t.test(Alu_mean[4:6], Alu_mean[7:9], paired=T)
+Alu_Tex15_WT_ttest
+Alu_Miwi2_Tex15_ttest <- t.test(Alu_mean[1:3], Alu_mean[4:6], paired=T)
+Alu_Miwi2_Tex15_ttest
+Alu_pvalues <- rbind(Miwi2_WT = Alu_Miwi2_WT_ttest$p.value, Tex15_WT = Alu_Tex15_WT_ttest$p.value, Miwi2_Tex15 = Alu_Miwi2_Tex15_ttest$p.value)
+
+
+ERVL_Miwi2_WT_ttest <- t.test(ERVL_mean[1:3], ERVL_mean[7:9], paired=T)
+ERVL_Miwi2_WT_ttest
+ERVL_Tex15_WT_ttest <- t.test(ERVL_mean[4:6], ERVL_mean[7:9], paired=T)
+ERVL_Tex15_WT_ttest
+ERVL_Miwi2_Tex15_ttest <- t.test(ERVL_mean[1:3], ERVL_mean[4:6], paired=T)
+ERVL_Miwi2_Tex15_ttest
+ERVL_pvalues <- rbind(Miwi2_WT = ERVL_Miwi2_WT_ttest$p.value, Tex15_WT = ERVL_Tex15_WT_ttest$p.value, Miwi2_Tex15 = ERVL_Miwi2_Tex15_ttest$p.value)
+
+
+ERVK_Miwi2_WT_ttest <- t.test(ERVK_mean[1:3], ERVK_mean[7:9], paired=T)
+ERVK_Miwi2_WT_ttest
+ERVK_Tex15_WT_ttest <- t.test(ERVK_mean[4:6], ERVK_mean[7:9], paired=T)
+ERVK_Tex15_WT_ttest
+ERVK_Miwi2_Tex15_ttest <- t.test(ERVK_mean[1:3], ERVK_mean[4:6], paired=T)
+ERVK_Miwi2_Tex15_ttest
+ERVK_pvalues <- rbind(Miwi2_WT = ERVK_Miwi2_WT_ttest$p.value, Tex15_WT = ERVK_Tex15_WT_ttest$p.value, Miwi2_Tex15 = ERVK_Miwi2_Tex15_ttest$p.value)
+
+
+MMERVK10c_Miwi2_WT_ttest <- t.test(MMERVK10c_mean[1:3], MMERVK10c_mean[7:9], paired=T)
+MMERVK10c_Miwi2_WT_ttest
+MMERVK10c_Tex15_WT_ttest <- t.test(MMERVK10c_mean[4:6], MMERVK10c_mean[7:9], paired=T)
+MMERVK10c_Tex15_WT_ttest
+MMERVK10c_Miwi2_Tex15_ttest <- t.test(MMERVK10c_mean[1:3], MMERVK10c_mean[4:6], paired=T)
+MMERVK10c_Miwi2_Tex15_ttest
+MMERVK10c_pvalues <- rbind(Miwi2_WT = MMERVK10c_Miwi2_WT_ttest$p.value, Tex15_WT = MMERVK10c_Tex15_WT_ttest$p.value, Miwi2_Tex15 = MMERVK10c_Miwi2_Tex15_ttest$p.value)
+
+feature_pvalues <- data.frame(CGI_pvalues, all_pvalues, gene_pvalues, promoter_pvalues, intergenic_pvalues, TE_pvalues, L1Md_A_pvalues, L1Md_T_pvalues,L1Md_Gf_pvalues, L1Md_F_pvalues, IAP_pvalues, IAPEz_pvalues, IAPEy_pvalues, Alu_pvalues, ERVL_pvalues, ERVK_pvalues, MMERVK10c_pvalues)
+
+#save data
+write.csv(feature_pvalues, file="/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/Boxplots/significance/mean_ttest.csv")
+
+# Bonf Adjust
+Miwi2_WT_padjust <- p.adjust(feature_pvalues[1,], method="bonferroni")
+Tex15_WT_padjust <- p.adjust(feature_pvalues[2,], method="bonferroni")
+Miwi2_Tex15_padjust <- p.adjust(feature_pvalues[3,], method="bonferroni")
+(feature_padjst <- data.frame(Miwi2_WT_padjust, Tex15_WT_padjust, Miwi2_Tex15_padjust))
+
+#save data
+write.csv(feature_padjst, file="/Users/berren01/Dropbox/projects/Spermatogonia/Theresa/Analysis/Boxplots/significance/mean_ttest_bonf.csv")
+```
