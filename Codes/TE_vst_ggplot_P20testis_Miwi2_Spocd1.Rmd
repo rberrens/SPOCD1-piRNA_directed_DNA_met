@@ -1,0 +1,291 @@
+---
+title: "TE_vst_ggplot"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(DESeq2)
+library(ggrastr)
+library(stringr)
+library("vsn")
+if (!require("RColorBrewer")) {
+install.packages("RColorBrewer")
+library(RColorBrewer)
+}
+```
+
+```{r}
+TE_list_rodrep <- read.table("/Users/ykabayam/Documents/RNA-seq/Ansgar_Spocd1/header_info_rodrep.txt", header = TRUE)
+
+Control1 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_WTA_rodrep_hit.txt", header = FALSE)
+Control2 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_WTB_rodrep_hit.txt", header = FALSE)
+Control3 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_WTC_rodrep_hit.txt", header = FALSE)
+Spocd1_1 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Spocd19_rodrep_hit.txt", header = FALSE)
+Spocd1_2 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Spocd110_rodrep_hit.txt", header = FALSE)
+Spocd1_3 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Spocd111_rodrep_hit.txt", header = FALSE)
+Miwi2_1 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Miwi2802_rodrep_hit.txt", header = FALSE)
+Miwi2_2 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Miwi2810_rodrep_hit.txt", header = FALSE)
+Miwi2_3 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Miwi2811_rodrep_hit.txt", header = FALSE)
+Tex15_1 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Tex15297_rodrep_hit.txt", header = FALSE)
+Tex15_2 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Tex15298_rodrep_hit.txt", header = FALSE)
+Tex15_3 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_Tex15301_rodrep_hit.txt", header = FALSE)
+C19_1 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_C19221_rodrep_hit.txt", header = FALSE)
+C19_2 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_C19224_rodrep_hit.txt", header = FALSE)
+C19_3 <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/out_bowtie2/count_C19225_rodrep_hit.txt", header = FALSE)
+
+colnames(Control1)=c("TE", "Control_1")
+colnames(Control2)=c("TE", "Control_2")
+colnames(Control3)=c("TE", "Control_3")
+colnames(Miwi2_1)=c("TE", "Miwi2_1")
+colnames(Miwi2_2)=c("TE", "Miwi2_2")
+colnames(Miwi2_3)=c("TE", "Miwi2_3")
+colnames(Spocd1_1)=c("TE", "Spocd1_1")
+colnames(Spocd1_2)=c("TE", "Spocd1_2")
+colnames(Spocd1_3)=c("TE", "Spocd1_3")
+colnames(Tex15_1)=c("TE", "Tex15_1")
+colnames(Tex15_2)=c("TE", "Tex15_2")
+colnames(Tex15_3)=c("TE", "Tex15_3")
+colnames(C19_1)=c("TE", "C19_1")
+colnames(C19_2)=c("TE", "C19_2")
+colnames(C19_3)=c("TE", "C19_3")
+
+master_ctrl <- left_join(Control1, Control2) %>% left_join(Control3)
+master_M <- left_join(Miwi2_1, Miwi2_2) %>% left_join(Miwi2_3)
+master_S <- left_join(Spocd1_1, Spocd1_2) %>% left_join(Spocd1_3)
+master_T <- left_join(Tex15_1, Tex15_2) %>% left_join(Tex15_3)
+master_C19 <- left_join(C19_1, C19_2) %>% left_join(C19_3)
+
+master_all <- left_join(master_ctrl, master_M) %>% left_join(master_S) %>% left_join(master_T) %>% left_join(master_C19)
+master_all[is.na(master_all)] <- 0
+#write.table(master_all, file = "/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/master_all_TE.txt", sep="\t", col.names=T, row.names=F, quote=F)
+
+master_GEO <- left_join(master_ctrl, master_M) %>% left_join(master_S)
+master_GEO[is.na(master_GEO)] <- 0
+write.table(master_GEO, file = "/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/spocd1_RNAseq_P20_TE_count.txt", sep="\t", col.names=T, row.names=F, quote=F)
+```
+
+```{r}
+TEcounts=read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/master_all_TE.txt", header=TRUE,row.names=1,fill=TRUE,sep="\t")
+#mircounts <- dplyr::select(mircounts, -Length, -sum)
+#class=mircounts$Class
+#clade=mircounts$Clade
+#names(class)=rownames(mircounts)
+#names(clade)=rownames(mircounts)
+#mircounts=mircounts[,3:ncol(mircounts)]
+conds=as.factor(c("ctrl","ctrl","ctrl","Miwi2","Miwi2","Miwi2","Spocd1","Spocd1","Spocd1","Tex15","Tex15","Tex15","wC19","wC19","wC19"))
+
+classcol=rainbow(length(levels(class)))
+names(classcol)=sort(levels(class))
+
+brewer.pal(length(unique(conds)),"Accent")
+cond_colours=brewer.pal(length(unique(conds)),"Accent")[as.factor(conds)]
+#cond_colours= rainbow(length(unique(conds)))[as.factor(conds)]
+names(cond_colours)=conds
+```
+
+```{r}
+barplot(apply(TEcounts,2,sum), las=2,col=cond_colours)
+legend("topright",levels((conds)),cex=0.6,fill=cond_colours[levels(conds)])
+```
+
+```{r}
+coldata = as.data.frame(t(t(conds)))
+rownames(coldata)=colnames(TEcounts)
+colnames(coldata)='condition'
+
+dds <- DESeqDataSetFromMatrix(countData = TEcounts, colData = coldata, design = ~ condition)
+dds <- estimateSizeFactors(dds)
+dds <- estimateDispersions(dds)
+dds <- nbinomWaldTest(dds)
+cds=dds
+
+counts_table=counts(dds,normalized=TRUE)
+```
+
+#PCA plot
+```{r}
+rld <- rlog(dds, blind = FALSE)
+plotPCA(rld, intgroup= c("condition"))
+ggsave("/Users/ykabayam/Documents/R_script/RNA-seq/P20_testis_SE/PCAplot_DESeq_mutants_P20tes_TE.pdf", width = 7, height = 5)
+```
+
+```{r}
+# Save raw counts
+rawcounts=counts(cds,normalized=FALSE)
+# Save normalized counts
+normcounts=counts(cds,normalized=TRUE)
+# Save log2 of normalized counts
+log2counts=log2(normcounts+1)
+# Save counts tranformed with variance Stabilizing Transformation
+vsd <- varianceStabilizingTransformation(cds)
+vstcounts <- assay(vsd)
+vstMat=vstcounts
+```
+
+```{r}
+pca <- princomp(vstcounts)
+plot(pca$loadings, col=cond_colours,  pch=19, cex=2, main="Sample to Sample PCA (VST)")
+text(pca$loadings, as.vector(colnames(TEcounts)), pos=3, cex=0.4)
+```
+
+```{r}
+siglist=c()
+hitarray=c()
+comparisons=0
+for (i in 1:length(sort(unique(conds)))){
+  for (j in i:length(sort(unique(conds)))){
+    if( i != j){
+      comparisons=comparisons+1
+      print(paste(i,j,"comparison ",comparisons))
+      c1=as.character(sort(unique(conds))[i]);
+      c2=as.character(sort(unique(conds))[j]);
+      print(paste(c1,"versus",c2))
+      
+      contrastname=paste(c1,"versus",c2)
+
+      
+      res <- results(dds, contrast=c("condition", c2, c1))
+      res <- res[order(res$padj),]
+      
+      
+      res_output=res;
+      res_output=res_output[rownames(counts(dds)),]
+      
+      for(z in 1:length(colnames(res_output))){
+        colnames(res_output)[z]=paste(c1,"_v_",c2,"_",colnames(res_output)[z],sep="")
+      }
+      counts_table=data.frame(counts_table,res_output)
+      
+      # Volcano Plot and Heatmaps of significant hits.
+      sig_p=0.01
+      sig_lfc=1
+      z=res
+      hitlist = rownames(res[(abs(z$log2FoldChange) > sig_lfc) & (z$padj <= sig_p) & (!is.na(z$log2FoldChange)) & (!is.na(z$padj)),])
+      hitlistids = (abs(z$log2FoldChange) > sig_lfc) & (z$padj <= sig_p) & (!is.na(z$log2FoldChange)) & (!is.na(z$padj))
+      
+      hitarray[[comparisons]]=hitlist
+      
+      hitlistup = rownames(res[((z$log2FoldChange) > sig_lfc) & (z$padj <= sig_p) & (!is.na(z$log2FoldChange)) & (!is.na(z$padj)),])
+      hitlistdown = rownames(res[((z$log2FoldChange) < -sig_lfc) & (z$padj <= sig_p) & (!is.na(z$log2FoldChange)) & (!is.na(z$padj)),])
+      
+      siglist=c(siglist,hitlist)
+
+m1=apply(counts(dds,normalized=TRUE)[,conds==c1],1,median)
+      m2=apply(counts(dds,normalized=TRUE)[,conds==c2],1,median)
+      
+      plot(log2(m1+1),log2(m2+1),xlab=c1,ylab=c2,pch=19,cex=0.5,col="grey",main=paste(contrastname,"Pairwise Plot RAW"))
+      if (length(hitlist)>=1){
+      points(log2(m1+1)[hitlist],log2(m2+1)[hitlist],pch=19,cex=0.5,col="red",main=paste(contrastname,"Pairwise Plot RAW"))
+      text(log2(m1+1)[hitlist],log2(m2+1)[hitlist],labels=hitlist,cex=0.4,pos=2)
+#      text(log2(m1+1)[hitlist[grep("IAP",hitlist)]],log2(m2+1)[hitlist[grep("IAP",hitlist)]],labels=hitlist[grep("IAP",hitlist)],cex=0.4,pos=2,col="red")
+#      legend("topleft",sort(unique(as.character(class[hitlist]))),cex=0.5,fill=classcol[sort(unique(as.character(class[hitlist])))],bty="n")
+      }
+#      legend("topright",paste(length(hitlistdown),"sig.\n genes above line"),cex=0.4)
+#      legend("bottomright",paste(length(hitlistup),"sig.\n genes above line"),cex=0.4)
+      abline(a=0,b=1,lty=2,col="red",lwd=0.5)
+      
+          }
+  }
+}
+   
+```
+
+```{r}
+m1=apply(assay(vsd)[,conds==c1],1,median)
+      m2=apply(assay(vsd)[,conds==c2],1,median)
+pdf("/Users/ykabayam/Documents/R_script/RNA-seq/pairwise_plot_TE_vst_spocd1.pdf")
+      plot(m1,m2,xlab=c1,ylab=c2,pch=19,col="grey",cex=0.5,main=paste(contrastname,"Pairwise Plot Stabilised"))
+      if (length(hitlist)>=1){
+      points(m1[hitlist],m2[hitlist],pch=19,cex=0.5,col="red")
+      text(m1[hitlist],m2[hitlist],cex=0.4,pos=2,labels=hitlist)
+      text(m1[hitlist[grep("IAP",hitlist)]],m2[hitlist[grep("IAP",hitlist)]],labels=hitlist[grep("IAP",hitlist)],cex=0.4,pos=2,col="red")
+#      legend("topleft",sort(unique(as.character(class[hitlist]))),cex=0.5,fill=classcol[sort(unique(as.character(class[hitlist])))],bty="n")
+      }
+#      legend("topright",paste(length(hitlistdown),"sig.\n genes above line"),cex=0.4)
+#      legend("bottomright",paste(length(hitlistup),"sig.\n genes above line"),cex=0.4)
+    
+      abline(a=0,b=1,lty=2,col="red",lwd=0.5)
+```
+
+#Convert it to ggplot
+```{r}
+#Add TE spiecies to vsd values table
+vst_table <- data.frame(vstcounts)
+vst_table$TE <- row.names(vst_table)
+vst_table <- mutate(vst_table, Mean_WT=rowMeans(vst_table[,c(1,2,3)])) %>% mutate(Mean_Miwi2_KO=rowMeans(vst_table[,c(4,5,6)])) %>%
+  mutate(Mean_Spocd1_KO=rowMeans(vst_table[,c(7,8,9)])) %>%
+  mutate(Mean_Tex15_KO=rowMeans(vst_table[,c(10,11,12)])) %>%
+  mutate(Mean_C19_KO=rowMeans(vst_table[,c(13,14,15)]))
+
+counts_table$TE <- row.names(counts_table)
+counts_pval <- dplyr::select(counts_table, "TE", "ctrl_v_Miwi2_log2FoldChange", "ctrl_v_Miwi2_padj", "ctrl_v_Spocd1_log2FoldChange", "ctrl_v_Spocd1_padj", "Miwi2_v_Spocd1_log2FoldChange", "Miwi2_v_Spocd1_padj")
+source_data <- left_join(vst_table, counts_pval, by = "TE")
+write.table(source_data, "/Users/ykabayam/Documents/piRNA/manuscript/source_data/extended_fig6.txt", quote = FALSE, col.names = TRUE, row.names = FALSE)
+```
+
+#Miwi2 KO vs Spocd1 KO
+```{r}
+#Add TE species as column to DESeq result table
+counts_table$TE <- row.names(counts_table)
+counts_pval <- dplyr::select(counts_table, "TE", "Miwi2_v_Spocd1_log2FoldChange", "Miwi2_v_Spocd1_padj")
+
+#combine 2 tables for gglot
+plot_table <- left_join(vst_table, counts_pval)
+write.table(plot_table, "/Users/ykabayam/Documents/piRNA/manuscript/source_data/extended_fig6c.txt", quote = FALSE, col.names = TRUE, row.names = FALSE)
+
+significant_up <- plot_table[plot_table$Miwi2_v_Spocd1_padj <= 0.01 & plot_table$Miwi2_v_Spocd1_log2FoldChange > 1 & !is.na(plot_table$Miwi2_v_Spocd1_log2FoldChange) & !is.na(plot_table$Miwi2_v_Spocd1_padj), ]
+
+significant_down <- plot_table[plot_table$Miwi2_v_Spocd1_padj <= 0.01 & plot_table$Miwi2_v_Spocd1_log2FoldChange < -1 & !is.na(plot_table$Miwi2_v_Spocd1_log2FoldChange) & !is.na(plot_table$Miwi2_v_Spocd1_padj), ]
+```
+
+#Control vs Miwi2 KO
+```{r}
+counts_pval <- dplyr::select(counts_table, "TE", "ctrl_v_Miwi2_log2FoldChange", "ctrl_v_Miwi2_padj")
+plot_table <- left_join(vst_table, counts_pval)
+
+significant_up <- plot_table[plot_table$ctrl_v_Miwi2_padj <= 0.01 & plot_table$ctrl_v_Miwi2_log2FoldChange > 1 & !is.na(plot_table$ctrl_v_Miwi2_log2FoldChange) & !is.na(plot_table$ctrl_v_Miwi2_padj), ]
+
+significant_down <- plot_table[plot_table$ctrl_v_Miwi2_padj <= 0.01 & plot_table$ctrl_v_Miwi2_log2FoldChange < -1 & !is.na(plot_table$ctrl_v_Miwi2_log2FoldChange) & !is.na(plot_table$ctrl_v_Miwi2_padj), ]
+```
+
+#Highlight TEs dysregulated in P20 Miwi2 KO
+```{r}
+list <- read.table("/Users/ykabayam/Documents/RNA-seq/P20_testis_SE/P20_RNA-seq_FC_pval.csv", sep = ",", header = TRUE)
+list2 <- list %>% filter(Control_vs_Miwi2_log2FoldChange >= 1)
+
+piRNA_TE <- left_join(list2, plot_table)
+
+ggplot() + geom_point_rast(data=vst_table, aes (x = Mean_Miwi2_KO, y = Mean_Spocd1_KO), color = "gray") + theme_classic(base_size = 15) +
+  geom_point_rast(data = piRNA_TE, aes (x = Mean_Miwi2_KO, y = Mean_Spocd1_KO), color = "black") +
+  geom_point_rast(data = significant_up, aes (x = Mean_Miwi2_KO, y = Mean_Spocd1_KO), color = "red") +
+  geom_point_rast(data = significant_down, aes (x = Mean_Miwi2_KO, y = Mean_Spocd1_KO), color = "red") +
+#  geom_text(data = piRNA_TE, aes(x = Mean_Miwi2_KO, y = Mean_Spocd1_KO, label=TE), hjust=1, vjust=1, size=3) +
+  geom_text(data = significant_up, aes(x = Mean_Miwi2_KO, y = Mean_Spocd1_KO, label=TE), hjust=1, vjust=1, size=3) +
+  geom_abline(slope = 1, color="black", lty=2, lwd=0.5) +
+  xlim(2, 16) + ylim(2, 16)
+
+```
+
+#Highlight significantly dysregulated TEs in red
+```{r}
+ggplot() + geom_point_rast(data=vst_table, aes (x = Mean_WT, y = Mean_Miwi2_KO), color = "gray") + theme_classic(base_size = 15) +
+  geom_point_rast(data = significant_up, aes (x = Mean_WT, y = Mean_Miwi2_KO), color = "red") +
+  geom_point_rast(data = significant_down, aes (x = Mean_WT, y = Mean_Miwi2_KO), color = "red") +
+  geom_text(data = significant_up, aes(x = Mean_WT, y = Mean_Miwi2_KO, label=TE), hjust=1, vjust=1, size=3) + 
+  geom_text(data = significant_down, aes(x = Mean_WT, y = Mean_Miwi2_KO, label=TE), hjust=1, vjust=1, size=3) +
+  geom_abline(slope = 1, color="black", lty=2, lwd=0.5)
+
+#ggsave("/Users/ykabayam/Documents/R_script/RNA-seq/P20_testis_SE/pairwise_ggplot_vst_Miwi2_no0.pdf", width = 5, height = 5)
+```
+
+```{r}
+list <- read.table("/Users/ykabayam/Documents/RNA-seq/TE_byMiwi2_v2.csv", sep = ",", header = TRUE)
+colnames(list) = c("TE", "Sample")
+
+piRNA_TE <- left_join(list, vst_table)
+```
+
+
